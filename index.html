@@ -292,10 +292,15 @@ function extractVideoUrl(data) {
   if (data.url && /^https?:\/\//.test(data.url)) return data.url;
   if (data.video_url && /^https?:\/\//.test(data.video_url)) return data.video_url;
   if (data.video && typeof data.video === 'string' && /^https?:\/\//.test(data.video)) return data.video;
-  // 嵌套 data.data
   if (data.data) {
     if (typeof data.data === 'string' && /^https?:\/\//.test(data.data)) return data.data;
     if (typeof data.data === 'object') {
+      // bugpk 聚合 video_backup 数组
+      if (data.data.video_backup && data.data.video_backup.length > 0) {
+        for (var i = 0; i < data.data.video_backup.length; i++) {
+          if (data.data.video_backup[i].url) return data.data.video_backup[i].url;
+        }
+      }
       if (data.data.url && /^https?:\/\//.test(data.data.url)) return data.data.url;
       if (data.data.video_url && /^https?:\/\//.test(data.data.video_url)) return data.data.video_url;
       if (data.data.video && typeof data.data.video === 'string') return data.data.video;
@@ -336,7 +341,12 @@ async function parseVideo() {
     let title = '';
 
     // 策略1: bugpk 聚合接口（支持 20+ 平台）
+    window._parsedTitle = '';
+    window._parsedMeta = '';
     videoUrl = await tryBugpk(url);
+    if (videoUrl) {
+      title = window._parsedTitle || '';
+    }
     if (!videoUrl) {
       // 策略2: 平台专用解析
       videoUrl = await tryPlatformParsers(url, platform);
@@ -370,7 +380,12 @@ async function tryBugpk(url) {
     const r = await fetchWithTimeout('https://api.bugpk.com/api/short_videos?url=' + encodeURIComponent(url), 10000);
     const d = await r.json();
     if (d.code === 200) {
-      return extractVideoUrl(d);
+      var u = extractVideoUrl(d);
+      if (u) {
+        if (d.data && d.data.title) window._parsedTitle = d.data.title;
+        if (d.data && d.data.author && d.data.author.name) window._parsedMeta = '作者: ' + d.data.author.name;
+        return u;
+      }
     }
   } catch(e) {}
   return null;
@@ -396,19 +411,13 @@ async function tryPlatformParsers(url, platform) {
 
 // --- 快手备用 ---
 async function parseKuaishou(url) {
-  const apis = [
-    'https://api.dlck.cn/api/ksvideo.php?url=',
-    'https://api.bugpk.com/api/ks?url=',
-    'https://api.bugpk.com/api/ks_jh?url=',
-  ];
-  for (let base of apis) {
-    try {
-      const r = await fetchWithTimeout(base + encodeURIComponent(url), 10000);
-      const d = await r.json();
-      const u = extractVideoUrl(d);
-      if (u) return u;
-    } catch(e) {}
-  }
+  // dlck 快手专用接口
+  try {
+    const r = await fetchWithTimeout('https://api.dlck.cn/api/ksvideo.php?url=' + encodeURIComponent(url), 10000);
+    const d = await r.json();
+    const u = extractVideoUrl(d);
+    if (u) return u;
+  } catch(e) {}
   return null;
 }
 
