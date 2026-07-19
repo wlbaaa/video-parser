@@ -239,7 +239,7 @@
     <input type="url" id="urlInput" placeholder="粘贴视频链接…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <button class="btn-parse" id="btnParse" onclick="parseVideo()">解析</button>
   </div>
-  <div class="quick-hint">支持：抖音 / 快手 / B站 / 小红书 / YouTube / 拼多多 / 微博 / 西瓜 等</div>
+  <div class="quick-hint">支持：抖音 / 快手 / B站 / 小红书 / YouTube / 拼多多 / 爱奇艺 / 微博 / 西瓜 等</div>
 
   <div class="status" id="status"></div>
 
@@ -280,6 +280,7 @@ function detectPlatform(url) {
     { name: 'Instagram', regex: /instagram\.com/ },
     { name: 'Twitter/X', regex: /twitter\.com|x\.com/ },
     { name: '拼多多', regex: /yangkeduo\.com|pinduoduo\.com/ },
+    { name: '爱奇艺', regex: /iqiyi\.com/ },
   ];
   for (let p of patterns) {
     if (p.regex.test(url)) return p.name;
@@ -586,6 +587,8 @@ function getEmbedUrl(url, platform) {
     }
     case '拼多多':
       return url;
+    case '爱奇艺':
+      return 'https://z1.m1907.cn/?jx=' + encodeURIComponent(url);
     default:
       return null;
   }
@@ -624,7 +627,7 @@ function showStatus(msg, type) {
 }
 
 function onSuccess(videoUrl, title, platform) {
-  const isEmbed = videoUrl.includes('player.bilibili.com') || videoUrl.includes('youtube.com/embed') || videoUrl.includes('yangkeduo.com');
+  const isEmbed = videoUrl.includes('player.bilibili.com') || videoUrl.includes('youtube.com/embed') || videoUrl.includes('yangkeduo.com') || videoUrl.includes('z1.m1907.cn') || videoUrl.includes('parwix.com') || videoUrl.includes('okjx.cc');
 
   if (isEmbed) {
     const wrapper = document.getElementById('playerWrapper');
