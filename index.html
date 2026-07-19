@@ -624,7 +624,7 @@ function showStatus(msg, type) {
 }
 
 function onSuccess(videoUrl, title, platform) {
-  const isEmbed = videoUrl.includes('player.bilibili.com') || videoUrl.includes('youtube.com/embed');
+  const isEmbed = videoUrl.includes('player.bilibili.com') || videoUrl.includes('youtube.com/embed') || videoUrl.includes('yangkeduo.com');
 
   if (isEmbed) {
     const wrapper = document.getElementById('playerWrapper');
