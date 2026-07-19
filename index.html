@@ -588,7 +588,7 @@ function getEmbedUrl(url, platform) {
     case '拼多多':
       return url;
     case '爱奇艺':
-      return 'https://z1.m1907.cn/?jx=' + encodeURIComponent(url);
+      return 'https://jx.xmflv.com/?url=' + encodeURIComponent(url);
     default:
       return null;
   }
@@ -627,7 +627,7 @@ function showStatus(msg, type) {
 }
 
 function onSuccess(videoUrl, title, platform) {
-  const isEmbed = videoUrl.includes('player.bilibili.com') || videoUrl.includes('youtube.com/embed') || videoUrl.includes('yangkeduo.com') || videoUrl.includes('z1.m1907.cn') || videoUrl.includes('parwix.com') || videoUrl.includes('okjx.cc');
+  const isEmbed = videoUrl.includes('player.bilibili.com') || videoUrl.includes('youtube.com/embed') || videoUrl.includes('yangkeduo.com') || videoUrl.includes('xmflv.com') || videoUrl.includes('ckplayer.vip');
 
   if (isEmbed) {
     const wrapper = document.getElementById('playerWrapper');
