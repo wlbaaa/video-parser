@@ -374,30 +374,35 @@ async function parseVideo() {
   document.getElementById('platformTag').textContent = platform;
   document.getElementById('platformTag').classList.add('show');
 
+  // 检测是否在本地 file:// 协议下运行（手机离线场景）
+  var isLocalFile = window.location.protocol === 'file:';
+
   try {
     let videoUrl = null;
     let title = '';
 
-    // 策略1: bugpk 聚合接口（支持 20+ 平台）
-    window._parsedTitle = '';
-    window._parsedMeta = '';
-    videoUrl = await tryBugpk(url);
-    if (videoUrl) {
-      title = window._parsedTitle || '';
-    }
-    if (!videoUrl) {
-      // 策略2: 平台专用解析
-      videoUrl = await tryPlatformParsers(url, platform);
-    }
-    if (!videoUrl) {
-      // 策略3: 拼多多专用解析
-      if (platform === '拼多多') {
-        videoUrl = await parsePinduoduo(url);
+    if (!isLocalFile) {
+      // 策略1: bugpk 聚合接口（支持 20+ 平台）
+      window._parsedTitle = '';
+      window._parsedMeta = '';
+      videoUrl = await tryBugpk(url);
+      if (videoUrl) {
+        title = window._parsedTitle || '';
       }
-    }
-    if (!videoUrl) {
-      // 策略4: B站官方API
-      videoUrl = await parseBilibili(url);
+      if (!videoUrl) {
+        // 策略2: 平台专用解析
+        videoUrl = await tryPlatformParsers(url, platform);
+      }
+      if (!videoUrl) {
+        // 策略3: 拼多多专用解析
+        if (platform === '拼多多') {
+          videoUrl = await parsePinduoduo(url);
+        }
+      }
+      if (!videoUrl) {
+        // 策略4: B站官方API
+        videoUrl = await parseBilibili(url);
+      }
     }
 
     if (videoUrl) {
@@ -407,7 +412,7 @@ async function parseVideo() {
       if (embedUrl) {
         onSuccess(embedUrl, title, platform);
       } else {
-        showStatus('未能解析到视频，请检查链接是否正确', 'error');
+        showStatus('未能解析到视频，请检查链接是否正确' + (isLocalFile ? '（抖音/快手等平台需联网使用）' : ''), 'error');
       }
     }
   } catch (e) {
