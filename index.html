@@ -239,7 +239,7 @@
     <input type="url" id="urlInput" placeholder="粘贴视频链接…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <button class="btn-parse" id="btnParse" onclick="parseVideo()">解析</button>
   </div>
-  <div class="quick-hint">支持：抖音 / 快手 / B站 / 小红书 / YouTube / 微博 / 西瓜 等</div>
+  <div class="quick-hint">支持：抖音 / 快手 / B站 / 小红书 / YouTube / 拼多多 / 微博 / 西瓜 等</div>
 
   <div class="status" id="status"></div>
 
@@ -279,6 +279,7 @@ function detectPlatform(url) {
     { name: 'TikTok', regex: /tiktok\.com/ },
     { name: 'Instagram', regex: /instagram\.com/ },
     { name: 'Twitter/X', regex: /twitter\.com|x\.com/ },
+    { name: '拼多多', regex: /yangkeduo\.com|pinduoduo\.com/ },
   ];
   for (let p of patterns) {
     if (p.regex.test(url)) return p.name;
@@ -317,6 +318,42 @@ function extractTitle(data) {
   return '';
 }
 
+// --- 拼多多解析 ---
+async function parsePinduoduo(url) {
+  const feedMatch = url.match(/feed_id=(\d+)/);
+  const feedId = feedMatch ? feedMatch[1] : null;
+
+  // 策略1: 尝试拼多多 feed 详情 API
+  if (feedId) {
+    const apis = [
+      'https://mobile.yangkeduo.com/proxy/api/api/oak/integral/short/video/feed/detail?feed_id=',
+      'https://mobile.yangkeduo.com/api/oak/integral/short/video/feed/detail?feed_id=',
+    ];
+    for (let base of apis) {
+      try {
+        const r = await fetchWithTimeout(base + feedId, 10000);
+        const d = await r.json();
+        if (d.video_url) return d.video_url;
+        if (d.data && d.data.video_url) return d.data.video_url;
+        if (d.result && d.result.video_url) return d.result.video_url;
+      } catch(e) {}
+    }
+  }
+
+  // 策略2: 尝试 bugpk 带 platform 参数
+  try {
+    const r = await fetchWithTimeout(
+      'https://api.bugpk.com/api/short_videos?url=' + encodeURIComponent(url) + '&platform=pinduoduo',
+      10000
+    );
+    const d = await r.json();
+    const u = extractVideoUrl(d);
+    if (u) return u;
+  } catch(e) {}
+
+  return null;
+}
+
 // ============ 解析核心 ============
 async function parseVideo() {
   const input = document.getElementById('urlInput');
@@ -352,7 +389,13 @@ async function parseVideo() {
       videoUrl = await tryPlatformParsers(url, platform);
     }
     if (!videoUrl) {
-      // 策略3: B站官方API
+      // 策略3: 拼多多专用解析
+      if (platform === '拼多多') {
+        videoUrl = await parsePinduoduo(url);
+      }
+    }
+    if (!videoUrl) {
+      // 策略4: B站官方API
       videoUrl = await parseBilibili(url);
     }
 
@@ -541,6 +584,8 @@ function getEmbedUrl(url, platform) {
       if (vid) return 'https://www.youtube.com/embed/' + vid;
       return null;
     }
+    case '拼多多':
+      return url;
     default:
       return null;
   }
