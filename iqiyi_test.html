@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>爱奇艺解析测试</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:sans-serif;background:#0f0f0f;color:#e0e0e0;min-height:100vh;padding:16px}
+h2{text-align:center;margin-bottom:12px;font-size:16px}
+input{width:100%;padding:12px;border:1px solid #333;border-radius:10px;background:#1a1a1a;color:#fff;font-size:14px;margin-bottom:8px}
+button{width:100%;padding:14px;border:none;border-radius:10px;background:#3b82f6;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;margin-bottom:8px}
+button:active{background:#2563eb}
+button.gray{background:#444}
+#player{border-radius:14px;overflow:hidden;display:none;margin-top:8px}
+#player.show{display:block}
+iframe{width:100%;height:60vh;border:none}
+#msg{text-align:center;color:#ff6b6b;font-size:13px;min-height:20px;margin-top:4px}
+</style>
+</head>
+<body>
+<h2>爱奇艺解析 - 极简测试</h2>
+<input id="url" type="url" placeholder="粘贴爱奇艺链接…" value="https://www.iqiyi.com/v_2c3zr1t103w.html">
+<button onclick="tryParser('xmflv')">解析方案1: xmflv.com</button>
+<button onclick="tryParser('ckplayer')">解析方案2: ckplayer.vip</button>
+<button onclick="tryParser('direct')">解析方案3: 直接嵌入爱奇艺</button>
+<div id="player"></div>
+<div id="msg"></div>
+
+<script>
+function msg(s){document.getElementById('msg').textContent=s}
+function tryParser(type){
+  var url=document.getElementById('url').value.trim();
+  if(!url){msg('请输入链接');return}
+  var p=document.getElementById('player');
+  p.classList.remove('show');
+  msg('正在加载…');
+  var embed;
+  if(type==='xmflv') embed='https://jx.xmflv.com/?url='+encodeURIComponent(url);
+  else if(type==='ckplayer') embed='https://www.ckplayer.vip/jiexi/?url='+encodeURIComponent(url);
+  else embed=url;
+  p.innerHTML='<iframe src="'+embed+'" allow="autoplay;fullscreen" allowfullscreen></iframe>';
+  p.classList.add('show');
+  msg('已加载 iframe: '+type+' — 如果下方空白，说明该方案不可用');
+}
+</script>
+</body>
+</html>
